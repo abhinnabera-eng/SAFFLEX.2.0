@@ -161,6 +161,10 @@
       border-top: 1px solid #24344d;
       font-size: 13px;
     }
+    #result {
+  white-space: pre-line;
+  line-height: 1.7;
+}
 
   </style>
 </head>
@@ -325,34 +329,11 @@ function changeLanguage() {
 }
 
 
+
 async function scanURL() {
   const input = document.getElementById("urlInput");
   const result = document.getElementById("result");
   const lang = document.getElementById("language").value;
-
-  const messages = {
-    en: {
-      empty: "Please enter a URL.",
-      loading: "Checking this link...",
-      dangerous: "⚠️ DANGEROUS: A known threat was detected.",
-      safe: "No known threat was found. This does NOT guarantee that the link is safe.",
-      error: "Unable to complete the scan. Please try again."
-    },
-    hi: {
-      empty: "कृपया एक URL दर्ज करें।",
-      loading: "लिंक की जाँच हो रही है...",
-      dangerous: "⚠️ खतरनाक: एक ज्ञात खतरा पाया गया।",
-      safe: "कोई ज्ञात खतरा नहीं मिला। इसका अर्थ यह नहीं है कि लिंक पूरी तरह सुरक्षित है।",
-      error: "जाँच पूरी नहीं हो सकी। कृपया दोबारा प्रयास करें।"
-    },
-    bn: {
-      empty: "অনুগ্রহ করে একটি URL লিখুন।",
-      loading: "লিংকটি পরীক্ষা করা হচ্ছে...",
-      dangerous: "⚠️ বিপজ্জনক: একটি পরিচিত হুমকি শনাক্ত হয়েছে।",
-      safe: "কোনো পরিচিত হুমকি পাওয়া যায়নি। এর অর্থ এই নয় যে লিংকটি সম্পূর্ণ নিরাপদ।",
-      error: "স্ক্যান সম্পন্ন করা যায়নি। আবার চেষ্টা করুন।"
-    }
-  };
 
   const languageAliases = {
     English: "en", Hindi: "hi", Bengali: "bn",
@@ -360,7 +341,130 @@ async function scanURL() {
   };
 
   const selectedLanguage = languageAliases[lang] || lang;
-  const text = messages[selectedLanguage] || messages.en;
+  const translations = {
+    en: {
+      empty: "Please enter a URL.",
+      loading: "Checking this link...",
+      invalid: "Please enter a valid URL.",
+      dangerous: "DANGEROUS — A known threat was detected.",
+      suspicious: "SUSPICIOUS — Potentially risky URL patterns detected.",
+      safe: "NO STRONG WARNING DETECTED",
+      score: "Risk score",
+      explanation: "WHY WAS THIS LINK FLAGGED?",
+      action: "WHAT SHOULD YOU DO NEXT?",
+      noReasons: "No specific warning indicators were returned.",
+      dangerousAdvice: [
+        "Do not open this link.",
+        "Do not enter passwords, OTPs or banking details.",
+        "If you already shared financial information, contact your bank immediately.",
+        "If you entered a password, change it using the official website."
+      ],
+      suspiciousAdvice: [
+        "Avoid opening this link until you verify it.",
+        "Never enter passwords, OTPs or banking details on an untrusted page.",
+        "Visit the organisation's official website directly.",
+        "Do not download files or install apps from this link."
+      ],
+      safeAdvice: [
+        "No strong suspicious URL pattern was detected.",
+        "Still verify the sender and website address.",
+        "Never share passwords or OTPs through an unexpected link."
+      ],
+      disclaimer: "This score is a pattern-based indicator, not a probability of being scammed. No known warning does not guarantee safety.",
+      error: "Unable to complete the scan. Please try again.",
+      reasons: {
+        ip_address_host: "The website uses an IP address instead of a normal domain name.",
+        punycode_domain: "The domain uses encoded characters that may disguise its appearance.",
+        many_subdomains: "The website address contains an unusually large number of subdomains.",
+        unusual_port: "The URL uses a non-standard web port.",
+        sensitive_keyword: "The URL contains words commonly associated with account access or sensitive information.",
+        many_query_parameters: "The URL contains an unusually large number of query parameters.",
+        long_url: "The URL is unusually long and may be difficult to inspect."
+      }
+    },
+    hi: {
+      empty: "कृपया एक URL दर्ज करें।",
+      loading: "लिंक की जाँच हो रही है...",
+      invalid: "कृपया एक मान्य URL दर्ज करें।",
+      dangerous: "खतरनाक — एक ज्ञात खतरा पाया गया।",
+      suspicious: "संदिग्ध — URL में संभावित जोखिम वाले पैटर्न मिले।",
+      safe: "कोई मजबूत चेतावनी नहीं मिली",
+      score: "जोखिम स्कोर",
+      explanation: "इस लिंक को संदिग्ध क्यों माना गया?",
+      action: "अब आपको क्या करना चाहिए?",
+      noReasons: "कोई विशेष चेतावनी संकेत नहीं मिला।",
+      dangerousAdvice: [
+        "इस लिंक को न खोलें।",
+        "पासवर्ड, OTP या बैंकिंग जानकारी दर्ज न करें।",
+        "यदि आपने वित्तीय जानकारी साझा की है, तो तुरंत अपने बैंक से संपर्क करें।",
+        "यदि आपने पासवर्ड दर्ज किया है, तो आधिकारिक वेबसाइट से उसे बदलें।"
+      ],
+      suspiciousAdvice: [
+        "सत्यापन होने तक इस लिंक को खोलने से बचें।",
+        "अविश्वसनीय वेबसाइट पर पासवर्ड, OTP या बैंकिंग जानकारी न दें।",
+        "संगठन की आधिकारिक वेबसाइट सीधे खोलें।",
+        "इस लिंक से कोई फाइल डाउनलोड या ऐप इंस्टॉल न करें।"
+      ],
+      safeAdvice: [
+        "कोई मजबूत संदिग्ध URL पैटर्न नहीं मिला।",
+        "फिर भी भेजने वाले और वेबसाइट के पते की जाँच करें।",
+        "अनजान लिंक पर पासवर्ड या OTP साझा न करें।"
+      ],
+      disclaimer: "यह स्कोर URL पैटर्न पर आधारित संकेत है, धोखाधड़ी की संभावना नहीं। कोई चेतावनी न मिलना सुरक्षा की गारंटी नहीं है।",
+      error: "जाँच पूरी नहीं हो सकी। कृपया दोबारा प्रयास करें।",
+      reasons: {
+        ip_address_host: "वेबसाइट सामान्य डोमेन के बजाय IP पते का उपयोग करती है।",
+        punycode_domain: "डोमेन में एन्कोड किए गए अक्षर हैं जो उसका वास्तविक रूप छिपा सकते हैं।",
+        many_subdomains: "वेबसाइट पते में असामान्य रूप से अधिक सबडोमेन हैं।",
+        unusual_port: "URL एक असामान्य वेब पोर्ट का उपयोग करता है।",
+        sensitive_keyword: "URL में खाते या संवेदनशील जानकारी से जुड़े शब्द हैं।",
+        many_query_parameters: "URL में असामान्य रूप से अधिक क्वेरी पैरामीटर हैं।",
+        long_url: "URL असामान्य रूप से लंबा है और उसकी जाँच कठिन हो सकती है।"
+      }
+    },
+    bn: {
+      empty: "অনুগ্রহ করে একটি URL লিখুন।",
+      loading: "লিংকটি পরীক্ষা করা হচ্ছে...",
+      invalid: "অনুগ্রহ করে একটি সঠিক URL লিখুন।",
+      dangerous: "বিপজ্জনক — একটি পরিচিত হুমকি শনাক্ত হয়েছে।",
+      suspicious: "সন্দেহজনক — URL-এ সম্ভাব্য ঝুঁকিপূর্ণ প্যাটার্ন পাওয়া গেছে।",
+      safe: "কোনো শক্তিশালী সতর্কতা পাওয়া যায়নি",
+      score: "ঝুঁকির স্কোর",
+      explanation: "কেন এই লিংকটি সন্দেহজনক?",
+      action: "এখন আপনার কী করা উচিত?",
+      noReasons: "নির্দিষ্ট কোনো সতর্কতামূলক সংকেত পাওয়া যায়নি।",
+      dangerousAdvice: [
+        "এই লিংকটি খুলবেন না।",
+        "পাসওয়ার্ড, OTP বা ব্যাংকিং তথ্য দেবেন না।",
+        "আর্থিক তথ্য দিয়ে থাকলে অবিলম্বে আপনার ব্যাংকের সঙ্গে যোগাযোগ করুন।",
+        "পাসওয়ার্ড দিয়ে থাকলে অফিসিয়াল ওয়েবসাইট থেকে সেটি পরিবর্তন করুন।"
+      ],
+      suspiciousAdvice: [
+        "যাচাই না করা পর্যন্ত এই লিংকটি খুলবেন না।",
+        "অবিশ্বস্ত ওয়েবসাইটে পাসওয়ার্ড, OTP বা ব্যাংকিং তথ্য দেবেন না।",
+        "প্রতিষ্ঠানের অফিসিয়াল ওয়েবসাইট সরাসরি খুলুন।",
+        "এই লিংক থেকে ফাইল ডাউনলোড বা অ্যাপ ইনস্টল করবেন না।"
+      ],
+      safeAdvice: [
+        "কোনো শক্তিশালী সন্দেহজনক URL প্যাটার্ন পাওয়া যায়নি।",
+        "তবুও প্রেরক এবং ওয়েবসাইটের ঠিকানা যাচাই করুন।",
+        "অপরিচিত লিংকে পাসওয়ার্ড বা OTP শেয়ার করবেন না।"
+      ],
+      disclaimer: "এই স্কোর URL প্যাটার্নের উপর ভিত্তি করে একটি সতর্কতা, প্রতারণার সম্ভাবনা নয়। কোনো সতর্কতা না পাওয়া নিরাপত্তার নিশ্চয়তা দেয় না।",
+      error: "স্ক্যান সম্পন্ন করা যায়নি। আবার চেষ্টা করুন।",
+      reasons: {
+        ip_address_host: "ওয়েবসাইটটি সাধারণ ডোমেনের বদলে IP ঠিকানা ব্যবহার করছে।",
+        punycode_domain: "ডোমেনে এমন এনকোড করা অক্ষর রয়েছে যা আসল ঠিকানা আড়াল করতে পারে।",
+        many_subdomains: "ওয়েবসাইটের ঠিকানায় অস্বাভাবিক সংখ্যক সাবডোমেন রয়েছে।",
+        unusual_port: "URL একটি অস্বাভাবিক ওয়েব পোর্ট ব্যবহার করছে।",
+        sensitive_keyword: "URL-এ অ্যাকাউন্ট বা সংবেদনশীল তথ্যের সঙ্গে যুক্ত শব্দ রয়েছে।",
+        many_query_parameters: "URL-এ অস্বাভাবিক সংখ্যক কোয়েরি প্যারামিটার রয়েছে।",
+        long_url: "URL-টি অস্বাভাবিক দীর্ঘ এবং পরীক্ষা করা কঠিন হতে পারে।"
+      }
+    }
+  };
+
+  const text = translations[selectedLanguage] || translations.en;
 
   let url = input.value.trim();
 
@@ -376,10 +480,14 @@ async function scanURL() {
   }
 
   try {
-    new URL(url);
+    const parsed = new URL(url);
+
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      throw new Error("Invalid protocol");
+    }
   } catch {
     result.style.display = "block";
-    result.textContent = "Please enter a valid URL.";
+    result.textContent = text.invalid;
     return;
   }
 
@@ -404,21 +512,67 @@ async function scanURL() {
       throw new Error("Scan failed");
     }
 
+    const lines = [];
+
+    const rawScore = Number(data.riskScore);
+    const score = Number.isFinite(rawScore)
+      ? Math.max(0, Math.min(100, Math.round(rawScore)))
+      : null;
+
+    const reasons = Array.isArray(data.reasonCodes)
+      ? data.reasonCodes
+      : [];
+
     if (data.verdict === "dangerous") {
-      result.textContent =
-        text.dangerous + "\nDetected: " +
-        (data.reasonCodes || []).join(", ");
+      lines.push("⚠️ " + text.dangerous);
+      lines.push("");
+      lines.push(text.score + ": " + (score === null ? "N/A" : score + "/100"));
+      lines.push("");
+      lines.push(text.action);
+      text.dangerousAdvice.forEach(item => lines.push("• " + item));
+
+    } else if (data.verdict === "suspicious") {
+      lines.push("⚠️ " + text.suspicious);
+      lines.push("");
+      lines.push(text.score + ": " + (score === null ? "N/A" : score + "/100"));
+      lines.push("");
+      lines.push(text.explanation);
+
+      if (reasons.length) {
+        reasons.forEach(code => {
+          lines.push("• " + (text.reasons[code] || code));
+        });
+      } else {
+        lines.push(text.noReasons);
+      }
+
+      lines.push("");
+      lines.push(text.action);
+      text.suspiciousAdvice.forEach(item => lines.push("• " + item));
+
     } else if (data.verdict === "no_known_threat") {
-      result.textContent = text.safe;
+      lines.push("✓ " + text.safe);
+      lines.push("");
+      lines.push(text.score + ": " + (score === null ? "N/A" : score + "/100"));
+      lines.push("");
+      lines.push(text.action);
+      text.safeAdvice.forEach(item => lines.push("• " + item));
+
     } else {
-      result.textContent = text.error;
+      throw new Error("Unexpected scan result");
     }
+
+    lines.push("");
+    lines.push("ℹ️ " + text.disclaimer);
+
+    result.textContent = lines.join("\n");
 
   } catch (error) {
     console.error("SAFFLEX scan error:", error);
     result.textContent = text.error;
   }
 }
+
 
 </script>
 
