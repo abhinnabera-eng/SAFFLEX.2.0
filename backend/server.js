@@ -4,9 +4,7 @@ const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
-const API_KEY = process.env.GOOGLE_WEBRISK_API_KEY;
 
-// Replace YOUR-USERNAME with your actual GitHub username.
 const allowedOrigins = [
   "https://abhinnabera-eng.github.io"
 ];
@@ -32,7 +30,6 @@ app.post("/api/scan", async (req, res) => {
   try {
     const { url } = req.body || {};
 
-    // Validate input
     if (
       typeof url !== "string" ||
       url.length === 0 ||
@@ -66,35 +63,25 @@ app.post("/api/scan", async (req, res) => {
       });
     }
 
-    if (!API_KEY) {
-      return res.status(503).json({
-        verdict: "unable_to_scan",
-        message: "Threat detection is not configured."
-      });
-    }
-
-    // Prepare Google Web Risk request
-    const params = new URLSearchParams();
-    params.append("uri", url);
-    params.append("threatTypes", "SOCIAL_ENGINEERING");
-    params.append("threatTypes", "MALWARE");
-    params.append("threatTypes", "UNWANTED_SOFTWARE");
-    params.append("key", API_KEY);
-
     const controller = new AbortController();
-    const timeout = setTimeout(
-      () => controller.abort(),
-      8000
-    );
+    const timeout = setTimeout(() => controller.abort(), 10000);
 
     let response;
 
     try {
+      const params = new URLSearchParams();
+      params.append("url", parsedURL.href);
+      params.append("format", "json");
+
       response = await fetch(
-        "https://webrisk.googleapis.com/v1/uris:search?" +
-          params.toString(),
+        "https://checkurl.phishtank.com/checkurl/",
         {
-          method: "GET",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": "SAFFLEX-LinkSafety/1.0"
+          },
+          body: params.toString(),
           signal: controller.signal
         }
       );
@@ -103,37 +90,37 @@ app.post("/api/scan", async (req, res) => {
     }
 
     if (!response.ok) {
-  const errorDetails = await response.text();
+      console.error(
+        "PhishTank returned HTTP status:",
+        response.status
+      );
 
-  console.error(
-    `Web Risk API returned ${response.status}: ${errorDetails}`
-  );
+      throw new Error("PhishTank request failed");
+    }
 
-  throw new Error(
-    `Threat provider request failed (${response.status})`
-  );
-}
     const data = await response.json();
+    const result = data.results;
 
-    // Google returns threatTypes inside data.threat
-    const matchedTypes = data.threat?.threatTypes || [];
+    if (!result) {
+      throw new Error("Unexpected PhishTank response");
+    }
 
-    const reasonMap = {
-      SOCIAL_ENGINEERING: "known_phishing",
-      MALWARE: "known_malware",
-      UNWANTED_SOFTWARE: "unwanted_software"
-    };
+    const verified =
+      result.verified === "y" || result.verified === true;
 
-    const reasonCodes = matchedTypes
-      .map(type => reasonMap[type])
-      .filter(Boolean);
+    const valid =
+      result.valid === "y" || result.valid === true;
 
-    if (reasonCodes.length > 0) {
+    if (
+      result.in_database === true &&
+      verified &&
+      valid
+    ) {
       return res.json({
         verdict: "dangerous",
         riskScore: 100,
-        reasonCodes,
-        message: "A known threat was identified."
+        reasonCodes: ["known_phishing"],
+        message: "A verified phishing URL was found."
       });
     }
 
@@ -142,7 +129,7 @@ app.post("/api/scan", async (req, res) => {
       riskScore: null,
       reasonCodes: [],
       message:
-        "No known threat was found in this check. This does not guarantee safety."
+        "No verified phishing match was found. This does not guarantee safety."
     });
 
   } catch (error) {
