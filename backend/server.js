@@ -1,6 +1,7 @@
 
 const express = require("express");
 const cors = require("cors");
+const { isIP } = require("node:net");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -16,6 +17,7 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
+
     return callback(new Error("Origin not allowed"));
   }
 }));
@@ -26,7 +28,73 @@ app.get("/", (req, res) => {
   });
 });
 
-app.post("/api/scan", async (req, res) => {
+// Analyse URL patterns without visiting the submitted website.
+function analyseURL(parsedURL) {
+  const reasons = [];
+  let score = 0;
+
+  const hostname = parsedURL.hostname.toLowerCase();
+  const cleanHostname = hostname.replace(/^\[|\]$/g, "");
+
+  // 1. Check whether the URL uses an IP address instead of a domain.
+  if (isIP(cleanHostname)) {
+    reasons.push("ip_address_host");
+    score += 35;
+  }
+
+  // 2. Check for internationalised/punycode domains.
+  if (hostname.split(".").some(label => label.startsWith("xn--"))) {
+    reasons.push("punycode_domain");
+    score += 30;
+  }
+
+  // 3. Check for an unusually deep subdomain structure.
+  const labels = hostname.split(".").filter(Boolean);
+
+  if (labels.length > 4) {
+    reasons.push("many_subdomains");
+    score += 15;
+  }
+
+  // 4. Check for unusual ports.
+  if (parsedURL.port) {
+    reasons.push("unusual_port");
+    score += 20;
+  }
+
+  // 5. Look for potentially sensitive words in the host or path.
+  // These words alone do NOT prove a link is malicious.
+  const textToCheck = hostname + parsedURL.pathname;
+
+  const suspiciousWords =
+    /(login|signin|verify|password|wallet|billing|payment|account|update)/i;
+
+  if (suspiciousWords.test(textToCheck)) {
+    reasons.push("sensitive_keyword");
+    score += 10;
+  }
+
+  // 6. Check for an unusually large number of query parameters.
+  const parameterCount = [...parsedURL.searchParams.keys()].length;
+
+  if (parameterCount > 8) {
+    reasons.push("many_query_parameters");
+    score += 5;
+  }
+
+  // 7. Check for unusually long URLs.
+  if (parsedURL.href.length > 300) {
+    reasons.push("long_url");
+    score += 5;
+  }
+
+  return {
+    score: Math.min(score, 100),
+    reasons
+  };
+}
+
+app.post("/api/scan", (req, res) => {
   try {
     const { url } = req.body || {};
 
@@ -54,6 +122,7 @@ app.post("/api/scan", async (req, res) => {
 
     if (
       !["http:", "https:"].includes(parsedURL.protocol) ||
+      !parsedURL.hostname ||
       parsedURL.username ||
       parsedURL.password
     ) {
@@ -63,76 +132,26 @@ app.post("/api/scan", async (req, res) => {
       });
     }
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
+    const analysis = analyseURL(parsedURL);
 
-    let response;
-
-    try {
-      const params = new URLSearchParams();
-      params.append("url", parsedURL.href);
-      params.append("format", "json");
-
-      response = await fetch(
-        "https://checkurl.phishtank.com/checkurl/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "User-Agent": "SAFFLEX-LinkSafety/1.0"
-          },
-          body: params.toString(),
-          signal: controller.signal
-        }
-      );
-    } finally {
-      clearTimeout(timeout);
-    }
-if (!response.ok) {
-  const errorDetails = await response.text();
-
-  console.error(
-    "PhishTank returned HTTP status:",
-    response.status
-  );
-
-  console.error("PhishTank error details:", errorDetails);
-
-  throw new Error("PhishTank request failed");
-}
-
-    const data = await response.json();
-    const result = data.results;
-
-    if (!result) {
-      throw new Error("Unexpected PhishTank response");
-    }
-
-    const verified =
-      result.verified === "y" || result.verified === true;
-
-    const valid =
-      result.valid === "y" || result.valid === true;
-
-    if (
-      result.in_database === true &&
-      verified &&
-      valid
-    ) {
+    if (analysis.reasons.length > 0) {
       return res.json({
-        verdict: "dangerous",
-        riskScore: 100,
-        reasonCodes: ["known_phishing"],
-        message: "A verified phishing URL was found."
+        verdict: "suspicious",
+        riskScore: analysis.score,
+        reasonCodes: analysis.reasons,
+        analysisType: "heuristic",
+        message:
+          "Potentially suspicious URL patterns were detected. This is a warning, not confirmation of malicious activity."
       });
     }
 
     return res.json({
       verdict: "no_known_threat",
-      riskScore: null,
+      riskScore: 0,
       reasonCodes: [],
+      analysisType: "heuristic",
       message:
-        "No verified phishing match was found. This does not guarantee safety."
+        "No strong URL-structure warning was detected. This does not guarantee safety. No live threat-intelligence database was checked."
     });
 
   } catch (error) {
