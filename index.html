@@ -324,19 +324,102 @@ function changeLanguage() {
   document.getElementById("result").style.display = "none";
 }
 
-function scanURL() {
+
+async function scanURL() {
   const input = document.getElementById("urlInput");
   const result = document.getElementById("result");
   const lang = document.getElementById("language").value;
 
-  if (!input.value.trim()) {
+  const messages = {
+    en: {
+      empty: "Please enter a URL.",
+      loading: "Checking this link...",
+      dangerous: "⚠️ DANGEROUS: A known threat was detected.",
+      safe: "No known threat was found. This does NOT guarantee that the link is safe.",
+      error: "Unable to complete the scan. Please try again."
+    },
+    hi: {
+      empty: "कृपया एक URL दर्ज करें।",
+      loading: "लिंक की जाँच हो रही है...",
+      dangerous: "⚠️ खतरनाक: एक ज्ञात खतरा पाया गया।",
+      safe: "कोई ज्ञात खतरा नहीं मिला। इसका अर्थ यह नहीं है कि लिंक पूरी तरह सुरक्षित है।",
+      error: "जाँच पूरी नहीं हो सकी। कृपया दोबारा प्रयास करें।"
+    },
+    bn: {
+      empty: "অনুগ্রহ করে একটি URL লিখুন।",
+      loading: "লিংকটি পরীক্ষা করা হচ্ছে...",
+      dangerous: "⚠️ বিপজ্জনক: একটি পরিচিত হুমকি শনাক্ত হয়েছে।",
+      safe: "কোনো পরিচিত হুমকি পাওয়া যায়নি। এর অর্থ এই নয় যে লিংকটি সম্পূর্ণ নিরাপদ।",
+      error: "স্ক্যান সম্পন্ন করা যায়নি। আবার চেষ্টা করুন।"
+    }
+  };
+
+  const languageAliases = {
+    English: "en", Hindi: "hi", Bengali: "bn",
+    english: "en", hindi: "hi", bengali: "bn"
+  };
+
+  const selectedLanguage = languageAliases[lang] || lang;
+  const text = messages[selectedLanguage] || messages.en;
+
+  let url = input.value.trim();
+
+  if (!url) {
+    result.style.display = "block";
+    result.textContent = text.empty;
     input.focus();
     return;
   }
 
+  if (!/^https?:\/\//i.test(url)) {
+    url = "https://" + url;
+  }
+
+  try {
+    new URL(url);
+  } catch {
+    result.style.display = "block";
+    result.textContent = "Please enter a valid URL.";
+    return;
+  }
+
   result.style.display = "block";
-  result.textContent = translations[lang].warning;
+  result.textContent = text.loading;
+
+  try {
+    const response = await fetch(
+      "https://safflex-2-0.onrender.com/api/scan",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ url })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || data.verdict === "unable_to_scan") {
+      throw new Error("Scan failed");
+    }
+
+    if (data.verdict === "dangerous") {
+      result.textContent =
+        text.dangerous + "\nDetected: " +
+        (data.reasonCodes || []).join(", ");
+    } else if (data.verdict === "no_known_threat") {
+      result.textContent = text.safe;
+    } else {
+      result.textContent = text.error;
+    }
+
+  } catch (error) {
+    console.error("SAFFLEX scan error:", error);
+    result.textContent = text.error;
+  }
 }
+
 </script>
 
 </body>
