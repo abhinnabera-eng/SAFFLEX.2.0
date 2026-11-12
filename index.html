@@ -1,0 +1,343 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#071426">
+  <title>SAFFLEX | Check Before You Click</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #071426;
+      color: #f4f7ff;
+      min-height: 100vh;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 22px 7%;
+      border-bottom: 1px solid #24344d;
+    }
+
+    .logo {
+      font-size: 27px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #54d6ff;
+    }
+
+    select {
+      padding: 10px;
+      border-radius: 8px;
+      background: #142640;
+      color: white;
+      border: 1px solid #52647d;
+    }
+
+    main {
+      max-width: 850px;
+      margin: 75px auto;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 8px 14px;
+      border: 1px solid #276a83;
+      border-radius: 30px;
+      color: #71dcff;
+      font-size: 13px;
+      margin-bottom: 25px;
+    }
+
+    h1 {
+      font-size: clamp(36px, 7vw, 62px);
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+
+    .highlight {
+      color: #54d6ff;
+    }
+
+    .subtitle {
+      color: #b5c3d8;
+      line-height: 1.7;
+      max-width: 650px;
+      margin: 0 auto 35px;
+    }
+
+    .scanner {
+      background: #10233b;
+      padding: 25px;
+      border: 1px solid #294563;
+      border-radius: 18px;
+      text-align: left;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 12px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 16px;
+      background: #071426;
+      color: white;
+      border: 1px solid #435a75;
+      border-radius: 9px;
+      font-size: 15px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      cursor: pointer;
+      padding: 15px 22px;
+      border: none;
+      border-radius: 9px;
+      background: #43c9f5;
+      color: #061426;
+      font-size: 16px;
+      font-weight: bold;
+      width: 100%;
+    }
+
+    button:hover {
+      background: #83e2ff;
+    }
+
+    #result {
+      display: none;
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 10px;
+      background: #192f49;
+      line-height: 1.6;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-top: 55px;
+      text-align: left;
+    }
+
+    .feature {
+      padding: 22px;
+      background: #10233b;
+      border: 1px solid #294563;
+      border-radius: 13px;
+    }
+
+    .feature h3 {
+      color: #54d6ff;
+      margin-bottom: 12px;
+    }
+
+    .feature p {
+      color: #b5c3d8;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    footer {
+      text-align: center;
+      color: #8fa4bd;
+      padding: 30px 15px;
+      border-top: 1px solid #24344d;
+      font-size: 13px;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">SAFFLEX</div>
+
+  <select id="language" onchange="changeLanguage()">
+    <option value="en">English</option>
+    <option value="hi">हिन्दी</option>
+    <option value="bn">বাংলা</option>
+  </select>
+</header>
+
+<main>
+
+  <div class="tag" id="tag">
+    AI-POWERED LINK SAFETY
+  </div>
+
+  <h1 id="heading">
+    Don't just click.<br>
+    <span class="highlight">Check first.</span>
+  </h1>
+
+  <p class="subtitle" id="subtitle">
+    Protect yourself from suspicious links.
+    Understand online threats before you trust a website.
+  </p>
+
+  <section class="scanner">
+
+    <label id="inputLabel" for="urlInput">
+      Enter a suspicious website URL
+    </label>
+
+    <input
+      id="urlInput"
+      type="url"
+      placeholder="https://example.com"
+      autocomplete="url"
+    >
+
+    <button id="scanButton" onclick="scanURL()">
+      Check Before You Click
+    </button>
+
+    <div id="result" role="status" aria-live="polite"></div>
+
+  </section>
+
+  <section class="features">
+
+    <div class="feature">
+      <h3 id="feature1Title">Smart URL Scanner</h3>
+      <p id="feature1Text">
+        Check submitted links against known online threats.
+      </p>
+    </div>
+
+    <div class="feature">
+      <h3 id="feature2Title">Scam Impact Explainer</h3>
+      <p id="feature2Text">
+        Understand what a suspicious link could do and how to stay safe.
+      </p>
+    </div>
+
+    <div class="feature">
+      <h3 id="feature3Title">Multilingual Protection</h3>
+      <p id="feature3Text">
+        Cybersecurity explanations in English, Hindi and Bengali.
+      </p>
+    </div>
+
+  </section>
+
+</main>
+
+<footer id="footer">
+  SAFFLEX | Intelligent Link Safety. For Everyone, Everywhere.
+  <br><br>
+  A scan result is an indicator, not a guarantee of safety.
+</footer>
+
+<script>
+const translations = {
+  en: {
+    tag: "AI-POWERED LINK SAFETY",
+    heading: 'Don\'t just click.<br><span class="highlight">Check first.</span>',
+    subtitle: "Protect yourself from suspicious links. Understand online threats before you trust a website.",
+    inputLabel: "Enter a suspicious website URL",
+    placeholder: "https://example.com",
+    button: "Check Before You Click",
+    feature1Title: "Smart URL Scanner",
+    feature1Text: "Check submitted links against known online threats.",
+    feature2Title: "Scam Impact Explainer",
+    feature2Text: "Understand what a suspicious link could do and how to stay safe.",
+    feature3Title: "Multilingual Protection",
+    feature3Text: "Cybersecurity explanations in English, Hindi and Bengali.",
+    footer: "SAFFLEX | Intelligent Link Safety. For Everyone, Everywhere.",
+    warning: "The scanning service is not connected yet. Please try again after backend integration."
+  },
+
+  hi: {
+    tag: "AI आधारित लिंक सुरक्षा",
+    heading: 'सिर्फ क्लिक न करें।<br><span class="highlight">पहले जांचें।</span>',
+    subtitle: "संदिग्ध लिंक से खुद को सुरक्षित रखें। किसी वेबसाइट पर भरोसा करने से पहले ऑनलाइन खतरों को समझें।",
+    inputLabel: "संदिग्ध वेबसाइट का लिंक डालें",
+    placeholder: "https://example.com",
+    button: "क्लिक करने से पहले जांचें",
+    feature1Title: "स्मार्ट URL स्कैनर",
+    feature1Text: "दिए गए लिंक को ज्ञात ऑनलाइन खतरों के लिए जांचें।",
+    feature2Title: "स्कैम प्रभाव समझाएं",
+    feature2Text: "समझें कि संदिग्ध लिंक क्या नुकसान कर सकता है और सुरक्षित कैसे रहें।",
+    feature3Title: "बहुभाषी सुरक्षा",
+    feature3Text: "अंग्रेज़ी, हिंदी और बंगाली में साइबर सुरक्षा की जानकारी।",
+    footer: "SAFFLEX | सभी के लिए, हर जगह स्मार्ट लिंक सुरक्षा।",
+    warning: "स्कैनिंग सेवा अभी कनेक्ट नहीं है। बैकएंड जुड़ने के बाद फिर प्रयास करें।"
+  },
+
+  bn: {
+    tag: "AI চালিত লিঙ্ক নিরাপত্তা",
+    heading: 'শুধু ক্লিক করবেন না।<br><span class="highlight">আগে যাচাই করুন।</span>',
+    subtitle: "সন্দেহজনক লিঙ্ক থেকে নিজেকে সুরক্ষিত রাখুন। কোনও ওয়েবসাইটে বিশ্বাস করার আগে অনলাইন ঝুঁকি বুঝুন।",
+    inputLabel: "সন্দেহজনক ওয়েবসাইটের লিঙ্ক দিন",
+    placeholder: "https://example.com",
+    button: "ক্লিক করার আগে যাচাই করুন",
+    feature1Title: "স্মার্ট URL স্ক্যানার",
+    feature1Text: "জমা দেওয়া লিঙ্ক পরিচিত অনলাইন হুমকির জন্য পরীক্ষা করুন।",
+    feature2Title: "প্রতারণার প্রভাব ব্যাখ্যা",
+    feature2Text: "সন্দেহজনক লিঙ্ক কী ক্ষতি করতে পারে এবং কীভাবে নিরাপদ থাকবেন বুঝুন।",
+    feature3Title: "বহুভাষিক সুরক্ষা",
+    feature3Text: "ইংরেজি, হিন্দি ও বাংলায় সাইবার নিরাপত্তার ব্যাখ্যা।",
+    footer: "SAFFLEX | সবার জন্য, সর্বত্র স্মার্ট লিঙ্ক নিরাপত্তা।",
+    warning: "স্ক্যানিং পরিষেবা এখনও সংযুক্ত নয়। ব্যাকএন্ড যুক্ত হওয়ার পরে আবার চেষ্টা করুন।"
+  }
+};
+
+function changeLanguage() {
+  const lang = document.getElementById("language").value;
+  const t = translations[lang];
+
+  document.documentElement.lang = lang;
+  document.getElementById("tag").textContent = t.tag;
+  document.getElementById("heading").innerHTML = t.heading;
+  document.getElementById("subtitle").textContent = t.subtitle;
+  document.getElementById("inputLabel").textContent = t.inputLabel;
+  document.getElementById("urlInput").placeholder = t.placeholder;
+  document.getElementById("scanButton").textContent = t.button;
+  document.getElementById("feature1Title").textContent = t.feature1Title;
+  document.getElementById("feature1Text").textContent = t.feature1Text;
+  document.getElementById("feature2Title").textContent = t.feature2Title;
+  document.getElementById("feature2Text").textContent = t.feature2Text;
+  document.getElementById("feature3Title").textContent = t.feature3Title;
+  document.getElementById("feature3Text").textContent = t.feature3Text;
+  document.getElementById("footer").innerHTML =
+    t.footer + "<br><br>A scan result is an indicator, not a guarantee of safety.";
+
+  document.getElementById("result").style.display = "none";
+}
+
+function scanURL() {
+  const input = document.getElementById("urlInput");
+  const result = document.getElementById("result");
+  const lang = document.getElementById("language").value;
+
+  if (!input.value.trim()) {
+    input.focus();
+    return;
+  }
+
+  result.style.display = "block";
+  result.textContent = translations[lang].warning;
+}
+</script>
+
+</body>
+</html>
