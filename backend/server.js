@@ -103,9 +103,16 @@ app.post("/api/scan", async (req, res) => {
     }
 
     if (!response.ok) {
-      throw new Error("Threat provider request failed");
-    }
+  const errorDetails = await response.text();
 
+  console.error(
+    `Web Risk API returned ${response.status}: ${errorDetails}`
+  );
+
+  throw new Error(
+    `Threat provider request failed (${response.status})`
+  );
+}
     const data = await response.json();
 
     // Google returns threatTypes inside data.threat
