@@ -88,15 +88,18 @@ app.post("/api/scan", async (req, res) => {
     } finally {
       clearTimeout(timeout);
     }
+if (!response.ok) {
+  const errorDetails = await response.text();
 
-    if (!response.ok) {
-      console.error(
-        "PhishTank returned HTTP status:",
-        response.status
-      );
+  console.error(
+    "PhishTank returned HTTP status:",
+    response.status
+  );
 
-      throw new Error("PhishTank request failed");
-    }
+  console.error("PhishTank error details:", errorDetails);
+
+  throw new Error("PhishTank request failed");
+}
 
     const data = await response.json();
     const result = data.results;
